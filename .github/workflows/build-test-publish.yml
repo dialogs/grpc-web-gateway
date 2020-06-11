@@ -22,15 +22,11 @@ jobs:
         run: npx codecov
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Git reset
-        run: |
-          git add --all
-          git reset --hard
-          git checkout master
 
   publish:
     needs: test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1

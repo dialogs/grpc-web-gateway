@@ -1,0 +1,32 @@
+name: Heroku
+
+on:
+  push:
+    branches:
+      - develop
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.13.x'
+      - name: Setup npm
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+      - name: Login to heroku
+        run: echo -e "machine api.heroku.com\n  login ${{ secrets.HEROKU_LOGIN }}\n  password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
+      - name: Build Docker image
+        working-directory: packages/platform-gateway
+        run: |
+          npm install
+          heroku container:login
+          heroku container:push web --app ${{ secrets.HEROKU_APP_NAME }}
+          heroku container:release web --app ${{ secrets.HEROKU_APP_NAME }}
+      - name: Docker login
+        run: docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+      - name: Docker publish
+        run: docker push $DOCKER_IMAGE_NAME
